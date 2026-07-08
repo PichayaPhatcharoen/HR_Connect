@@ -57,7 +57,7 @@ Full-stack web application designed to streamline human resource management for 
     ```bash
     docker-compose up -d
     ```
-5. ""Because this project uses an external Docker volume for persistent PostgreSQL data, you must create it manually before starting the services. Run the following command in your terminal:
+5. Because this project uses an external Docker volume for persistent PostgreSQL data, you must create it manually before starting the services. Run the following command in your terminal:
     ```bash
     docker volume create 1c6b08f75b8e0c4a06bdbf7dea3c63d6ad6867d6722b5b75b0ce47daea590b38
     ```
