@@ -1,0 +1,77 @@
+x-gpu: &gpu
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: all
+            capabilities: [gpu]
+
+volumes:
+  1c6b08f75b8e0c4a06bdbf7dea3c63d6ad6867d6722b5b75b0ce47daea590b38:
+    external: true
+  ollama_models:
+  uploads_data:
+  users_data:
+  
+networks:
+  core:
+    external: true
+    name: hr-bot_core
+
+services:
+  next-app:
+    build: ./OnlineChatbotHR/aichatbot-langchain-nextjs
+    ports:
+      - "3000:3000"
+    volumes:
+      - uploads_data:/app/public/uploads
+      - users_data:/app/public/users
+    env_file:
+      - ./OnlineChatbotHR/aichatbot-langchain-nextjs/.env
+    networks: [core]
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11435:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks: [core]
+
+  postgres:
+    image: pgvector/pgvector:pg18
+    container_name: final_hr_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: final_hr
+      PGDATA: /var/lib/postgresql/18/docker
+    ports:
+      - "5439:5432"
+    volumes:
+      - 1c6b08f75b8e0c4a06bdbf7dea3c63d6ad6867d6722b5b75b0ce47daea590b38:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [core]
+

@@ -1,0 +1,584 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table Users {
+  UserId String [pk]
+  Username String [unique, not null]
+  Password String [not null]
+  Email String [unique, not null]
+  Role UserRole [not null, default: 'STAFF']
+  Name String [not null]
+  Title Usertitle [not null, default: 'MR']
+  Picture String
+  Phone String [not null]
+  IsOnline Boolean [not null, default: false]
+  AnnouncementId Announcements [not null]
+  DirectContact_Accepted DirectContact_Requests [not null]
+  EmployeeId Employees
+  SourceDocuments source_documents [not null]
+}
+
+Table Employees {
+  EmployeeId String [pk]
+  FullName String [not null]
+  Gender Gender [not null]
+  BirthDate DateTime [not null]
+  Age Int [not null]
+  StartDate DateTime [not null]
+  WorkDuration Int [not null]
+  StaffType StaffType [not null]
+  JobTitle String
+  PositionNumber Int
+  Degree Degree [not null]
+  DegreeDetail String
+  Email String [unique, not null]
+  Phone String
+  Status EmployeeStatus [not null, default: 'ACTIVE']
+  UserId String [unique]
+  AdministrativePositions EmployeeAdministrativePositions [not null]
+  EmployeeContracts EmployeeContracts [not null]
+  User Users
+  Employment Employments [not null]
+  Position Positions [not null]
+  Resignations Resignations [not null]
+  TrainingParticipants TrainingParticipants [not null]
+  Decorations employee_decorations [not null]
+  CreatedAt DateTime [default: `now()`, not null]
+  UpdatedAt DateTime [default: `now()`, not null]
+}
+
+Table Employments {
+  EmploymentId String [pk]
+  EmployeeId String [not null]
+  StartDate DateTime [not null]
+  EndDate DateTime
+  EmploymentType EmploymentType [not null]
+  Employee Employees [not null]
+}
+
+Table EmployeeAdministrativePositions {
+  EmployeeAdministrativePositionId String [pk]
+  EmployeeId String [not null]
+  PositionName String [not null]
+  StartDate DateTime [not null]
+  EndDate DateTime
+  Employee Employees [not null]
+}
+
+Table Positions {
+  PositionId String [pk]
+  EmployeeId String [not null]
+  AcademicPosition AcademicPosition
+  SupportPosition SupportPosition
+  StartDate DateTime
+  EndDate DateTime
+  AcademicRetirementNotifiedHR Boolean [not null, default: false]
+  AcademicRetirementReadByHR Boolean [not null, default: false]
+  Employee Employees [not null]
+}
+
+Table EmployeeContracts {
+  ContractId String [pk]
+  EmployeeId String [not null]
+  ContractType ContractType [not null]
+  ContractRound Int
+  StartDate DateTime [not null]
+  EndDate DateTime [not null]
+  IsActive Boolean [not null, default: true]
+  NotifiedHR Boolean [not null, default: false]
+  ReadByHR Boolean [not null, default: false]
+  Employee Employees [not null]
+}
+
+Table royal_decorations {
+  DecorationId String [pk]
+  Name String [not null]
+  Abbreviation String [not null]
+  Level String
+  Type DecorationType [not null]
+  EmployeeLinks employee_decorations [not null]
+}
+
+Table employee_decorations {
+  EmployeeDecorationId String [pk]
+  EmployeeId String [not null]
+  DecorationId String [not null]
+  ReceivedDate DateTime
+  GazetteDate DateTime
+  CreatedAt DateTime [default: `now()`, not null]
+  Decoration royal_decorations [not null]
+  Employee Employees [not null]
+}
+
+Table StudentInfo {
+  StudentInfoId String [pk]
+  TotalStudent Int [not null]
+  Year String [not null]
+  YearType StudentYearType [not null, default: 'ACADEMIC']
+}
+
+Table Resignations {
+  ResignationId String [pk]
+  EmployeeId String [not null]
+  ResignDate DateTime [not null]
+  Reason ResignReason [not null]
+  WorkingYears Float [not null]
+  Employee Employees [not null]
+}
+
+Table TrainingEvents {
+  TrainingEventId String [pk]
+  Title String [not null]
+  Category TrainingCategory [not null]
+  CategoryOther String
+  Domain TrainingDomain [not null, default: 'ACADEMIC']
+  DomainOther String
+  Description String
+  StartDate DateTime [not null]
+  EndDate DateTime [not null]
+  LocationType LocationType [not null]
+  LocationName String
+  Organizer String
+  Format TrainingFormat [not null]
+  Budget Float
+  YearBudget String
+  YearAcademic String
+  Hours Int
+  Participants TrainingParticipants [not null]
+  UpdatedAt DateTime [default: `now()`, not null]
+}
+
+Table TrainingParticipants {
+  TrainingParticipantId String [pk]
+  TrainingEventId String [not null]
+  EmployeeId String [not null]
+  Employee Employees [not null]
+  Training TrainingEvents [not null]
+
+  indexes {
+    (TrainingEventId, EmployeeId) [unique]
+  }
+}
+
+Table LineFriends {
+  LineFriendId String [pk]
+  LineUserId String [unique, not null]
+  DisplayName String [not null]
+  PictureUrl String
+  CreatedAt DateTime [default: `now()`, not null]
+  IsActive Boolean [not null, default: true]
+  BlockedAt DateTime
+  Conversations Conversations [not null]
+  DirectContacts DirectContact_Requests [not null]
+  Feedbacks Feedbacks [not null]
+}
+
+Table DirectContact_Requests {
+  DirectContactRequestId String [pk]
+  LineUserId String [not null]
+  DisplayName String [not null]
+  Request String [not null]
+  CreatedAt DateTime [default: `now()`, not null]
+  Status DirectContact_Request_Status [not null, default: 'PENDING']
+  UserId String
+  LineFriend LineFriends [not null]
+  acceptedBy Users
+}
+
+Table Conversations {
+  ConversationId String [pk]
+  LineUserId String
+  CreatedAt DateTime [default: `now()`, not null]
+  Type ConversationType [not null]
+  Status ConversationStatus [not null]
+  Channel ConversationChannel [not null]
+  SessionId String [unique]
+  UpdatedAt DateTime [default: `now()`, not null]
+  LineFriend LineFriends
+  Messages Messages [not null]
+}
+
+Table Messages {
+  MessageId String [pk]
+  ConversationId String [not null]
+  Role MessageRole [not null]
+  Content String [not null]
+  Sources Json
+  Metadata Json
+  CreatedAt DateTime [default: `now()`, not null]
+  ResponseTimeSeconds Float
+  Conversation Conversations [not null]
+}
+
+Table FAQCategories {
+  FAQCategoryId String [pk]
+  Name String [not null]
+  FAQs faqs [not null]
+}
+
+Table FAQCandidates {
+  FAQCandidateId String [pk]
+  OriginalQuestion String [not null]
+  NormalizedQuestion String [not null]
+  BotAnswer String [not null]
+  QuestionHash String [unique, not null]
+  TopScore Float
+  AnswerType String
+  Channel ConversationChannel [not null]
+  AskCount Int [not null, default: 1]
+  FirstAskedAt DateTime [default: `now()`, not null]
+  LastAskedAt DateTime [default: `now()`, not null]
+  Status FAQCandidateStatus [not null, default: 'PENDING']
+  ReviewedBy String
+  ReviewedAt DateTime
+  ReviewNotes String
+  ApprovedFAQId String
+  ApprovedFAQ faqs
+  Title String
+}
+
+Table document_categories {
+  CategoryId String [pk]
+  Name String [unique, not null]
+  Description String
+  DisplayOrder Int [not null, default: 0]
+  CreatedAt DateTime [default: `now()`, not null]
+  UpdatedAt DateTime [not null]
+  Tags document_tags [not null]
+}
+
+Table document_tags {
+  TagId String [pk]
+  Name String [not null]
+  Description String
+  CategoryId String [not null]
+  DisplayOrder Int [not null, default: 0]
+  CreatedAt DateTime [default: `now()`, not null]
+  UpdatedAt DateTime [not null]
+  Documents document_tag_assignments [not null]
+  Category document_categories [not null]
+
+  indexes {
+    (CategoryId, Name) [unique]
+  }
+}
+
+Table document_tag_assignments {
+  DocumentId Int [not null]
+  TagId String [not null]
+  AssignedAt DateTime [default: `now()`, not null]
+  Document source_documents [not null]
+  Tag document_tags [not null]
+
+  indexes {
+    (DocumentId, TagId) [pk]
+  }
+}
+
+Table source_documents {
+  SourceDocumentId Int [pk, increment]
+  FileName String [not null]
+  StoragePath String [unique, not null]
+  MimeType String
+  Bytes Int
+  UserId String
+  CreatedAt DateTime [default: `now()`, not null]
+  UpdatedAt DateTime [not null]
+  CategoryId String
+  CustomCategoryName String
+  KnowledgeDrafts KnowledgeDraft [not null]
+  Chunks document_chunks [not null]
+  Tags document_tag_assignments [not null]
+  User Users
+}
+
+Table document_chunks {
+  ChunkId Int [pk, increment]
+  SourceDocumentId Int [not null]
+  Content String [not null]
+  ChunkIndex Int [not null]
+  Hash String
+  Source source_documents [not null]
+
+  indexes {
+    (SourceDocumentId, ChunkIndex) [unique]
+  }
+}
+
+Table Announcements {
+  AnnouncementId String [pk]
+  Title String [not null]
+  Content String [not null]
+  Picture String [not null]
+  Link String
+  Status AnnouncementStatus [not null, default: 'ACTIVE']
+  Position AnnouncementPosition [not null, default: 'TOP']
+  CreatedAt DateTime [default: `now()`, not null]
+  UserId String
+  IsLatest Boolean [not null, default: false]
+  users Users
+}
+
+Table Feedbacks {
+  FeedbackId String [pk]
+  LineUserId String
+  Rating Int [not null]
+  Comment String
+  CreatedAt DateTime [default: `now()`, not null]
+  Source FeedbackSource [not null]
+  DataAccuracyScore Int
+  ResponseTimeScore Int
+  DocumentAccessScore Int
+  ServiceQualityScore Int
+  ChannelUsabilityScore Int
+  LineFriend LineFriends
+}
+
+Table KnowledgeDraft {
+  KnowledgeDraftId String [pk]
+  Title String [not null]
+  Body String [not null]
+  Domain String [not null, default: 'general']
+  Intent String [not null, default: 'how_to']
+  Keywords String[] [not null]
+  SourceRef String
+  Status KnowledgeDraftStatus [not null, default: 'DRAFT']
+  PublishedAt DateTime
+  SourceDocumentId Int
+  CreatedAt DateTime [default: `now()`, not null]
+  UpdatedAt DateTime [not null]
+  SourceDocument source_documents
+}
+
+Table faqs {
+  FAQId String [pk]
+  Question String [not null]
+  Answer String [not null]
+  CategoryId String
+  Category FAQCategories
+  UsageCount Int [not null, default: 0]
+  CreatedAt DateTime [default: `now()`, not null]
+  UpdatedAt DateTime [default: `now()`, not null]
+  IsActive Boolean [not null, default: true]
+  ApprovedCandidates FAQCandidates [not null]
+}
+
+Enum AcademicPosition {
+  LECTURER
+  ASSISTANT_PROFESSOR
+  ASSOCIATE_PROFESSOR
+  PROFESSOR
+}
+
+Enum SupportPosition {
+  OPERATIONAL_LEVEL
+  SENIOR_PRACTITIONER
+  EXPERT
+  SENIOR_EXPERT
+}
+
+Enum StudentYearType {
+  ACADEMIC
+  BUDGET
+}
+
+Enum UserRole {
+  ADMIN
+  STAFF
+}
+
+Enum Usertitle {
+  MR
+  MRS
+  MISS
+}
+
+Enum Gender {
+  MALE
+  FEMALE
+}
+
+Enum Degree {
+  BACHELOR
+  MASTER
+  DOCTOR
+  OTHER
+}
+
+Enum StaffType {
+  ACADEMIC
+  SUPPORT
+}
+
+Enum EmployeeStatus {
+  ACTIVE
+  RESIGNED
+  RETIRED
+}
+
+Enum EmploymentType {
+  GOVERNMENT
+  BUDGET
+  INCOME
+  SPECIAL
+}
+
+Enum ContractType {
+  PROBATION
+  EMPLOYMENT
+}
+
+Enum DecorationType {
+  MEDAL
+  BELOW_SASH
+  SASH
+}
+
+Enum ResignReason {
+  PERSONAL_BUSINESS
+  HEALTH
+  STUDY
+  OTHER
+  RETIREMENT
+  END_OF_CONTRACT
+  NEW_JOB
+  NON_RENEWAL
+  DEATH
+}
+
+Enum TrainingCategory {
+  TRAINING
+  CONFERENCE
+  SEMINAR
+  OTHER
+}
+
+Enum TrainingDomain {
+  ACADEMIC
+  TECHNICAL
+  MANAGEMENT
+  SOFT_SKILLS
+  COMPLIANCE
+  OTHER
+}
+
+Enum TrainingFormat {
+  ONSITE
+  ONLINE
+  HYBRID
+}
+
+Enum LocationType {
+  FACULTY
+  BMR
+  PROVINCE
+  INTERNATIONAL
+  ONLINE
+}
+
+Enum DirectContact_Request_Status {
+  PENDING
+  ACCEPTED
+  ENDING
+}
+
+Enum ConversationType {
+  BOT
+  STAFF
+}
+
+Enum ConversationStatus {
+  OPEN
+  CLOSED
+}
+
+Enum ConversationChannel {
+  LINE
+  WEB
+}
+
+Enum MessageRole {
+  user
+  assistant
+  system
+}
+
+Enum FAQCandidateStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  DUPLICATE
+  IGNORED
+}
+
+Enum AnnouncementStatus {
+  ACTIVE
+  INACTIVE
+}
+
+Enum AnnouncementPosition {
+  TOP
+  MIDDLE
+  LEFT
+  RIGHT
+}
+
+Enum FeedbackSource {
+  WEBSITE
+  LINE
+}
+
+Enum KnowledgeDraftStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+Ref: Employees.UserId - Users.UserId
+
+Ref: Employments.EmployeeId > Employees.EmployeeId
+
+Ref: EmployeeAdministrativePositions.EmployeeId > Employees.EmployeeId
+
+Ref: Positions.EmployeeId > Employees.EmployeeId
+
+Ref: EmployeeContracts.EmployeeId > Employees.EmployeeId
+
+Ref: employee_decorations.DecorationId > royal_decorations.DecorationId
+
+Ref: employee_decorations.EmployeeId > Employees.EmployeeId
+
+Ref: Resignations.EmployeeId > Employees.EmployeeId
+
+Ref: TrainingParticipants.EmployeeId > Employees.EmployeeId
+
+Ref: TrainingParticipants.TrainingEventId > TrainingEvents.TrainingEventId
+
+Ref: DirectContact_Requests.LineUserId > LineFriends.LineUserId
+
+Ref: DirectContact_Requests.UserId > Users.UserId
+
+Ref: Conversations.LineUserId > LineFriends.LineUserId
+
+Ref: Messages.ConversationId > Conversations.ConversationId [delete: Cascade]
+
+Ref: FAQCandidates.ApprovedFAQId > faqs.FAQId [delete: Set Null]
+
+Ref: document_tags.CategoryId > document_categories.CategoryId [delete: Cascade]
+
+Ref: document_tag_assignments.DocumentId > source_documents.SourceDocumentId [delete: Cascade]
+
+Ref: document_tag_assignments.TagId > document_tags.TagId [delete: Cascade]
+
+Ref: source_documents.UserId > Users.UserId
+
+Ref: document_chunks.SourceDocumentId > source_documents.SourceDocumentId [delete: Cascade]
+
+Ref: Announcements.UserId > Users.UserId
+
+Ref: Feedbacks.LineUserId > LineFriends.LineUserId
+
+Ref: KnowledgeDraft.SourceDocumentId > source_documents.SourceDocumentId
+
+Ref: faqs.CategoryId > FAQCategories.FAQCategoryId

@@ -1,0 +1,7 @@
+/.next
+./OnlineChatbotHR/aichatbot-langchain-nextjs/node_modules
+.git
+Dockerfile
+docker-compose.yml
+uploads
+users

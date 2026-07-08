@@ -1,0 +1,614 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator dbml {
+  provider = "prisma-dbml-generator"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  UserId                 String                   @id @default(uuid())
+  Username               String                   @unique
+  Password               String
+  Email                  String                   @unique
+  Role                   UserRole                 @default(STAFF)
+  Name                   String
+  Title                  Usertitle                @default(MR)
+  Picture                String?
+  Phone                  String
+  IsOnline               Boolean                  @default(false)
+  AnnouncementId         Announcements[]
+  DirectContact_Accepted DirectContact_Requests[] @relation("Accepted")
+  EmployeeId             Employees?
+  SourceDocuments        SourceDocuments[]
+}
+
+model Employees {
+  EmployeeId              String                            @id @default(uuid())
+  FullName                String
+  Gender                  Gender
+  BirthDate               DateTime
+  Age                     Int
+  StartDate               DateTime
+  WorkDuration            Int
+  StaffType               StaffType
+  JobTitle                String?
+  PositionNumber          Int?
+  Degree                  Degree
+  DegreeDetail            String?
+  Email                   String                            @unique
+  Phone                   String?
+  Status                  EmployeeStatus                    @default(ACTIVE)
+  UserId                  String?                           @unique
+  AdministrativePositions EmployeeAdministrativePositions[]
+  EmployeeContracts       EmployeeContracts[]
+  User                    Users?                            @relation(fields: [UserId], references: [UserId])
+  Employment              Employments[]
+  Position                Positions[]
+  Resignations            Resignations[]
+  TrainingParticipants    TrainingParticipants[]
+  Decorations             EmployeeDecorations[]
+  CreatedAt               DateTime                @default(now())
+  UpdatedAt               DateTime                @default(now()) @updatedAt
+
+  @@index([StaffType])
+  @@index([JobTitle])
+  @@index([Status])
+}
+
+model Employments {
+  EmploymentId   String         @id @default(uuid())
+  EmployeeId     String
+  StartDate      DateTime
+  EndDate        DateTime?
+  EmploymentType EmploymentType
+  Employee       Employees      @relation(fields: [EmployeeId], references: [EmployeeId])
+}
+
+model EmployeeAdministrativePositions {
+  EmployeeAdministrativePositionId String    @id @default(uuid()) @map("EmployeeAdministrativePositionid")
+  EmployeeId                       String
+  PositionName                     String
+  StartDate                        DateTime
+  EndDate                          DateTime?
+  Employee                         Employees @relation(fields: [EmployeeId], references: [EmployeeId])
+}
+
+model Positions {
+  PositionId       String            @id @default(uuid())
+  EmployeeId       String
+  AcademicPosition AcademicPosition?
+  SupportPosition  SupportPosition?
+  StartDate        DateTime?
+  EndDate          DateTime?
+  AcademicRetirementNotifiedHR Boolean @default(false)
+  AcademicRetirementReadByHR     Boolean @default(false)
+  Employee         Employees         @relation(fields: [EmployeeId], references: [EmployeeId])
+
+  @@index([EmployeeId])
+  @@index([AcademicPosition])
+  @@index([SupportPosition])
+}
+
+//แบ่งตามตำแหน่งทางวิชาการ (อาจารย์ / ผศ. / รศ. / ศ.)
+enum AcademicPosition {
+  LECTURER // อาจารย์
+  ASSISTANT_PROFESSOR // ผศ.
+  ASSOCIATE_PROFESSOR // รศ.
+  PROFESSOR // ศ.
+}
+
+//แบ่งตามตำแหน่งสนับสนุน (สายสนับสุนนวิชาการ/ชำนาญการพิเศษ/เชี่ยวชาญ/เชี่ยวชาญพิเศษ)
+enum SupportPosition {
+  OPERATIONAL_LEVEL // ระดับปฏิบัติการ
+  SENIOR_PRACTITIONER // ชำนาญการพิเศษ
+  EXPERT // เชี่ยวชาญ
+  SENIOR_EXPERT // เชี่ยวชาญพิเศษ
+}
+
+model EmployeeContracts {
+  ContractId    String       @id @default(uuid())
+  EmployeeId    String
+  ContractType  ContractType
+  ContractRound Int?
+  StartDate     DateTime
+  EndDate       DateTime
+  IsActive      Boolean      @default(true)
+  NotifiedHR    Boolean      @default(false)
+  ReadByHR      Boolean      @default(false)
+  Employee      Employees    @relation(fields: [EmployeeId], references: [EmployeeId])
+
+  @@index([EmployeeId])
+  @@index([EndDate])
+}
+
+model RoyalDecorations {
+  DecorationId  String                @id @default(uuid())
+  Name          String
+  Abbreviation  String
+  Level         String?
+  Type          DecorationType
+  EmployeeLinks EmployeeDecorations[]
+
+  @@map("royal_decorations")
+}
+
+model EmployeeDecorations {
+  EmployeeDecorationId String           @id @default(uuid())
+  EmployeeId           String
+  DecorationId         String
+  ReceivedDate         DateTime?
+  GazetteDate          DateTime?
+  CreatedAt            DateTime         @default(now())
+  Decoration           RoyalDecorations @relation(fields: [DecorationId], references: [DecorationId])
+  Employee             Employees        @relation(fields: [EmployeeId], references: [EmployeeId])
+
+  @@index([EmployeeId])
+  @@index([DecorationId])
+  @@map("employee_decorations")
+}
+
+model StudentInfo {
+  StudentInfoId String @id @default(uuid())
+  TotalStudent  Int
+  Year          String
+  YearType      StudentYearType @default(ACADEMIC)
+
+  @@index([YearType, Year])
+}
+
+enum StudentYearType {
+  ACADEMIC
+  BUDGET
+}
+
+model Resignations {
+  ResignationId String       @id @default(uuid())
+  EmployeeId    String
+  ResignDate    DateTime
+  Reason        ResignReason
+  WorkingYears  Float
+  Employee      Employees    @relation(fields: [EmployeeId], references: [EmployeeId])
+
+  @@index([EmployeeId, ResignDate])
+}
+
+model TrainingEvents {
+  TrainingEventId String                 @id @default(uuid())
+  Title           String
+  Category        TrainingCategory
+  CategoryOther   String?
+  Domain          TrainingDomain         @default(ACADEMIC)
+  DomainOther     String?
+  Description     String?
+  StartDate       DateTime
+  EndDate         DateTime
+  LocationType    LocationType
+  LocationName    String?
+  Organizer       String?
+  Format          TrainingFormat
+  Budget          Float?
+  YearBudget      String?
+  YearAcademic    String?
+  Hours           Int?
+  Participants    TrainingParticipants[]
+  UpdatedAt       DateTime               @default(now()) @updatedAt
+
+  @@index([StartDate, EndDate])
+  @@index([LocationType])
+  @@index([YearBudget])
+  @@index([Category])
+}
+
+model TrainingParticipants {
+  TrainingParticipantId String         @id @default(uuid())
+  TrainingEventId       String
+  EmployeeId            String
+  Employee              Employees      @relation(fields: [EmployeeId], references: [EmployeeId])
+  Training              TrainingEvents @relation(fields: [TrainingEventId], references: [TrainingEventId])
+
+  @@unique([TrainingEventId, EmployeeId])
+  @@index([EmployeeId, TrainingEventId])
+}
+
+model LineFriends {
+  LineFriendId   String                   @id @default(uuid())
+  LineUserId     String                   @unique
+  DisplayName    String
+  PictureUrl     String?
+  CreatedAt      DateTime                 @default(now())
+  IsActive       Boolean                  @default(true)
+  BlockedAt      DateTime?
+  Conversations  Conversations[]
+  DirectContacts DirectContact_Requests[]
+  Feedbacks      Feedbacks[]
+}
+
+model DirectContact_Requests {
+  DirectContactRequestId String                       @id @default(uuid())
+  LineUserId             String
+  DisplayName            String
+  Request                String
+  CreatedAt              DateTime                     @default(now())
+  Status                 DirectContact_Request_Status @default(PENDING)
+  UserId                 String?
+  LineFriend             LineFriends                  @relation(fields: [LineUserId], references: [LineUserId])
+  acceptedBy             Users?                       @relation("Accepted", fields: [UserId], references: [UserId])
+
+  @@index([Status])
+  @@index([CreatedAt])
+  @@index([LineUserId])
+}
+
+model Conversations {
+  ConversationId   String           @id @default(uuid())
+  LineUserId     String?
+  CreatedAt      DateTime         @default(now())
+  Type           ConversationType
+  Status         ConversationStatus
+  Channel        ConversationChannel
+  SessionId      String?          @unique
+  UpdatedAt      DateTime         @default(now()) @updatedAt
+  LineFriend     LineFriends?     @relation(fields: [LineUserId], references: [LineUserId])
+  Messages       Messages[]
+
+  @@index([CreatedAt])
+  @@index([Status])
+  @@index([Channel])
+  @@index([LineUserId])
+  @@index([SessionId])
+}
+
+model Messages {
+  MessageId           String        @id @default(uuid())
+  ConversationId      String
+  Role                MessageRole
+  Content             String
+  Sources             Json?
+  Metadata            Json?
+  CreatedAt           DateTime      @default(now())
+  ResponseTimeSeconds Float?
+  Conversation        Conversations @relation(fields: [ConversationId], references: [ConversationId], onDelete: Cascade)
+
+  @@index([ConversationId, CreatedAt])
+}
+
+model FAQCategories {
+  FAQCategoryId String        @id @default(uuid())
+  Name          String
+  FAQs          FAQs[]
+}
+
+model FAQCandidates {
+  FAQCandidateId     String              @id @default(uuid())
+  OriginalQuestion   String
+  NormalizedQuestion String
+  BotAnswer          String
+  QuestionHash       String              @unique
+  TopScore           Float?
+  AnswerType         String?
+  Channel            ConversationChannel
+  AskCount           Int                 @default(1)
+  FirstAskedAt       DateTime            @default(now())
+  LastAskedAt        DateTime            @default(now())
+  Status             FAQCandidateStatus  @default(PENDING)
+  ReviewedBy         String?
+  ReviewedAt         DateTime?
+  ReviewNotes        String?
+  ApprovedFAQId      String?             @map("ApprovedFAQId")
+  ApprovedFAQ        FAQs?               @relation(fields: [ApprovedFAQId], references: [FAQId], onDelete: SetNull)
+  Title              String?
+
+  @@index([Status, AskCount])
+  @@index([QuestionHash])
+  @@index([LastAskedAt])
+  @@index([Channel])
+  @@index([ApprovedFAQId])
+}
+
+model DocumentCategory {
+  CategoryId   String        @id @default(uuid())
+  Name         String        @unique
+  Description  String?
+  DisplayOrder Int           @default(0)
+  CreatedAt    DateTime      @default(now())
+  UpdatedAt    DateTime      @updatedAt
+  Tags         DocumentTag[]
+
+  @@map("document_categories")
+}
+
+model DocumentTag {
+  TagId        String                  @id @default(uuid())
+  Name         String
+  Description  String?
+  CategoryId   String
+  DisplayOrder Int                     @default(0)
+  CreatedAt    DateTime                @default(now())
+  UpdatedAt    DateTime                @updatedAt
+  Documents    DocumentTagAssignment[]
+  Category     DocumentCategory        @relation(fields: [CategoryId], references: [CategoryId], onDelete: Cascade)
+
+  @@unique([CategoryId, Name])
+  @@index([CategoryId])
+  @@map("document_tags")
+}
+
+model DocumentTagAssignment {
+  DocumentId Int
+  TagId      String
+  AssignedAt DateTime        @default(now())
+  Document   SourceDocuments @relation(fields: [DocumentId], references: [SourceDocumentId], onDelete: Cascade)
+  Tag        DocumentTag     @relation(fields: [TagId], references: [TagId], onDelete: Cascade)
+
+  @@id([DocumentId, TagId])
+  @@index([DocumentId])
+  @@index([TagId])
+  @@map("document_tag_assignments")
+}
+
+model SourceDocuments {
+  SourceDocumentId   Int                     @id @default(autoincrement())
+  FileName           String
+  StoragePath        String                  @unique
+  MimeType           String?
+  Bytes              Int?
+  UserId             String?
+  CreatedAt          DateTime                @default(now())
+  UpdatedAt          DateTime                @updatedAt
+  CategoryId         String?
+  CustomCategoryName String?
+  KnowledgeDrafts    KnowledgeDraft[]
+  Chunks             DocumentChunks[]
+  Tags               DocumentTagAssignment[]
+  User               Users?                  @relation(fields: [UserId], references: [UserId])
+
+  @@index([CategoryId])
+  @@map("source_documents")
+}
+
+model DocumentChunks {
+  ChunkId          Int                    @id @default(autoincrement())
+  SourceDocumentId Int
+  Content          String
+  ChunkIndex       Int
+  Hash             String?
+  Embedding        Unsupported("vector")?
+  Source           SourceDocuments        @relation(fields: [SourceDocumentId], references: [SourceDocumentId], onDelete: Cascade)
+
+  @@unique([SourceDocumentId, ChunkIndex])
+  @@map("document_chunks")
+}
+
+model Announcements {
+  AnnouncementId String               @id @default(uuid())
+  Title          String
+  Content        String
+  Picture        String
+  Link           String?
+  Status         AnnouncementStatus   @default(ACTIVE)
+  Position       AnnouncementPosition @default(TOP)
+  CreatedAt      DateTime             @default(now())
+  UserId         String?
+  IsLatest       Boolean              @default(false)
+  users          Users?               @relation(fields: [UserId], references: [UserId])
+
+  @@index([Status])
+  @@index([Position])
+  @@index([IsLatest])
+  @@index([CreatedAt])
+}
+
+model Feedbacks {
+  FeedbackId            String         @id @default(uuid())
+  LineUserId            String?
+  Rating                Int            @db.SmallInt
+  Comment               String?
+  CreatedAt             DateTime       @default(now())
+  Source                FeedbackSource
+  DataAccuracyScore     Int?           @db.SmallInt
+  ResponseTimeScore     Int?           @db.SmallInt
+  DocumentAccessScore   Int?           @db.SmallInt
+  ServiceQualityScore   Int?           @db.SmallInt
+  ChannelUsabilityScore Int?           @db.SmallInt
+  LineFriend            LineFriends?   @relation(fields: [LineUserId], references: [LineUserId])
+
+  @@index([CreatedAt])
+  @@index([Source])
+  @@index([LineUserId])
+}
+
+model KnowledgeDraft {
+  KnowledgeDraftId String               @id @default(uuid())
+  Title            String
+  Body             String
+  Domain           String               @default("general")
+  Intent           String               @default("how_to")
+  Keywords         String[]
+  SourceRef        String?
+  Status           KnowledgeDraftStatus @default(DRAFT)
+  PublishedAt      DateTime?
+  SourceDocumentId Int?
+  CreatedAt        DateTime             @default(now())
+  UpdatedAt        DateTime             @updatedAt
+  SourceDocument   SourceDocuments?     @relation(fields: [SourceDocumentId], references: [SourceDocumentId])
+
+  @@index([Status])
+  @@index([Domain])
+}
+
+model FAQs {
+  FAQId              String              @id @default(uuid())
+  Question           String
+  Answer             String
+  QuestionEmbedding  Unsupported("vector")?
+  CategoryId         String?
+  Category           FAQCategories?      @relation(fields: [CategoryId], references: [FAQCategoryId])
+  UsageCount         Int                 @default(0)
+  CreatedAt          DateTime            @default(now())
+  UpdatedAt          DateTime            @default(now()) @updatedAt
+  IsActive           Boolean             @default(true)
+  ApprovedCandidates FAQCandidates[]
+
+  @@index([CategoryId])
+  @@index([UsageCount])
+  @@map("faqs")
+}
+
+
+enum UserRole {
+  ADMIN
+  STAFF
+}
+
+enum Usertitle {
+  MR
+  MRS
+  MISS
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum Degree {
+  BACHELOR
+  MASTER
+  DOCTOR
+  OTHER 
+}
+
+enum StaffType {
+  ACADEMIC
+  SUPPORT
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  RESIGNED
+  RETIRED
+}
+
+enum EmploymentType {
+  GOVERNMENT
+  BUDGET
+  INCOME
+  SPECIAL
+}
+
+enum ContractType {
+  PROBATION
+  EMPLOYMENT
+}
+
+enum DecorationType {
+  MEDAL
+  BELOW_SASH
+  SASH
+}
+
+enum ResignReason {
+  PERSONAL_BUSINESS
+  HEALTH
+  STUDY
+  OTHER
+  RETIREMENT
+  END_OF_CONTRACT
+  NEW_JOB
+  NON_RENEWAL
+  DEATH
+}
+
+enum TrainingCategory {
+  TRAINING
+  CONFERENCE
+  SEMINAR
+  OTHER
+}
+
+enum TrainingDomain {
+  ACADEMIC
+  TECHNICAL
+  MANAGEMENT
+  SOFT_SKILLS
+  COMPLIANCE
+  OTHER
+}
+
+enum TrainingFormat {
+  ONSITE
+  ONLINE
+  HYBRID
+}
+
+enum LocationType {
+  FACULTY
+  BMR
+  PROVINCE
+  INTERNATIONAL
+  ONLINE
+}
+
+enum DirectContact_Request_Status {
+  PENDING
+  ACCEPTED
+  ENDING
+}
+
+enum ConversationType {
+  BOT
+  STAFF
+}
+
+enum ConversationStatus {
+  OPEN
+  CLOSED
+}
+
+enum ConversationChannel {
+  LINE
+  WEB
+}
+
+enum MessageRole {
+  user
+  assistant
+  system
+}
+
+enum FAQCandidateStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  DUPLICATE
+  IGNORED
+}
+
+enum AnnouncementStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AnnouncementPosition {
+  TOP
+  MIDDLE
+  LEFT
+  RIGHT
+}
+
+enum FeedbackSource {
+  WEBSITE
+  LINE
+}
+
+enum KnowledgeDraftStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
